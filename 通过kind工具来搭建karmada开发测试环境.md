@@ -7,7 +7,6 @@
 ```bash
 qinhan@qinhan-VMware-Virtual-Platform:~$ docker -v
 Docker version 28.1.1, build 4eba377
-
 ```
 
 ### 2.安装go
@@ -35,13 +34,13 @@ qinhan@qinhan-VMware-Virtual-Platform:~$ kind version
 kind v0.27.0 go1.23.8 linux/amd64
 ```
 
-### 4.安装 Karmadactl
+### 5.安装 Karmadactl
 
 ```bash
 curl -s https://raw.githubusercontent.com/karmada-io/karmada/master/hack/install-cli.sh | sudo bash
 ```
 
-### 5.安装kubectl-karmada
+### 6.安装kubectl-karmada
 
 ```bash
 curl -s https://raw.githubusercontent.com/karmada-io/karmada/master/hack/install-cli.sh | sudo bash -s kubectl-karmada
@@ -90,7 +89,7 @@ ls ~/.kube/host.config
 
 ### 5. **安装 Karmada CLI 并确认版本**
 
-确保已安装与你的 Karmada 版本匹配的 CLI（以 v1.2.0 为例）：
+确保已安装与你的 Karmada 版本匹配的 CLI（以 v1.13.2 为例）：
 
 ```bash
 sudo kubectl karmada init --crds https://github.com/karmada-io/karmada/releases/download/v1.13.2/crds.tar.gz --kubeconfig=$HOME/.kube/host.config
@@ -128,10 +127,16 @@ kind load docker-image docker.io/karmada/karmada-webhook:v1.13.2 --name karmada-
 
 ```
 
-### 7.如果安装失败则卸载并重新安装（执行3.重新进行安装）
+### 7.如果安装失败则卸载并重新安装（执行5.重新进行安装）
 
 ```bash
 karmadactl deinit --kubeconfig=$HOME/.kube/host.config
+```
+
+### 8.安装成功后
+
+```
+安装成功后通过指定用户目录下的.karmada/karmada-apiserver.config配置文件来操作karmada
 ```
 
 ### 8.创建一个成员集群并将其加入kubectl上下文再加入karmada集群
