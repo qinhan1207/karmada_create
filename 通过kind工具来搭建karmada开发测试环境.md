@@ -7,7 +7,6 @@
 ```bash
 qinhan@qinhan-VMware-Virtual-Platform:~$ docker -v
 Docker version 28.1.1, build 4eba377
-
 ```
 
 ### 2.安装go
@@ -35,13 +34,13 @@ qinhan@qinhan-VMware-Virtual-Platform:~$ kind version
 kind v0.27.0 go1.23.8 linux/amd64
 ```
 
-### 4.安装 Karmadactl
+### 5.安装 Karmadactl
 
 ```bash
 curl -s https://raw.githubusercontent.com/karmada-io/karmada/master/hack/install-cli.sh | sudo bash
 ```
 
-### 5.安装kubectl-karmada
+### 6.安装kubectl-karmada
 
 ```bash
 curl -s https://raw.githubusercontent.com/karmada-io/karmada/master/hack/install-cli.sh | sudo bash -s kubectl-karmada
@@ -70,16 +69,16 @@ kind export kubeconfig --name host --kubeconfig ~/.kube/config
 kubectl config get-contexts
 
 # 切换集群
-kubectl config use-context kind-karmada-host
+kubectl config use-context kind-host
 ```
 
-### 4. **获取 `karmada-host` 集群的 kubeconfig**
+### 4. **获取 `karmada-host` 集群的 kubeconfig(如果）**
 
 默认情况下，`kind` 集群的 kubeconfig 会合并到 `~/.kube/config` 中，但我们可以单独导出 `karmada-host` 集群的配置：
 
 ```
 # 导出 karmada-host 集群的 kubeconfig 到 host.config
-kind get kubeconfig --name karmada-host > ~/.kube/host.config
+kind get kubeconfig --name kind-host > ~/.kube/host.config
 ```
 
 验证文件是否生成：
@@ -88,15 +87,25 @@ kind get kubeconfig --name karmada-host > ~/.kube/host.config
 ls ~/.kube/host.config
 ```
 
-### 5. **安装 Karmada CLI 并确认版本**
+### 5.遇到webhook组件报too many files的错误（可提前执行，防止报错）
 
-确保已安装与你的 Karmada 版本匹配的 CLI（以 v1.2.0 为例）：
+```bash
+# 进入到运行webhook组件的容器的内部并执行下面命令
+docker exec -it host-control-plane bin/bash
+sysctl fs.inotify.max_user_watches=16384
+sysctl -w fs.inotify.max_user_watches=100000
+sysctl -w fs.inotify.max_user_instances=100000
+```
+
+### 6. **安装 Karmada 并确认版本**
+
+确保已安装与你的 Karmada 版本匹配的 CLI（以 v1.13.2 为例）：
 
 ```bash
 sudo kubectl karmada init --crds https://github.com/karmada-io/karmada/releases/download/v1.13.2/crds.tar.gz --kubeconfig=$HOME/.kube/host.config
 ```
 
-### 6.手动导入镜像到kind创建的集群 
+### 7.手动导入镜像到kind创建的集群 （若网络不好，可在安装前执行）
 
 ```bash
 docker pull docker.io/alpine:3.21.0
@@ -126,15 +135,42 @@ kind load docker-image docker.io/karmada/karmada-controller-manager:v1.13.2 --na
 docker pull docker.io/karmada/karmada-webhook:v1.13.2
 kind load docker-image docker.io/karmada/karmada-webhook:v1.13.2 --name karmada-host
 
+# 批量拉取
+docker pull docker.io/alpine:3.21.0 &
+docker pull registry.k8s.io/etcd:3.5.16-0 &
+docker pull registry.k8s.io/kube-apiserver:v1.31.3 &
+docker pull docker.io/karmada/karmada-controller-manager:v1.9.0 &
+docker pull docker.io/karmada/karmada-aggregated-apiserver:v1.13.2 &
+docker pull docker.io/karmada/karmada-scheduler:v1.13.2 &
+docker pull registry.k8s.io/kube-controller-manager:v1.31.3 &
+docker pull docker.io/karmada/karmada-controller-manager:v1.13.2 &
+docker pull docker.io/karmada/karmada-webhook:v1.13.2 &
+
+kind load docker-image --name=host \
+  docker.io/alpine:3.21.0 \
+  registry.k8s.io/etcd:3.5.16-0 \
+  registry.k8s.io/kube-apiserver:v1.31.3 \
+  docker.io/karmada/karmada-controller-manager:v1.9.0 \
+  docker.io/karmada/karmada-aggregated-apiserver:v1.13.2 \
+  docker.io/karmada/karmada-scheduler:v1.13.2 \
+  registry.k8s.io/kube-controller-manager:v1.31.3 \
+  docker.io/karmada/karmada-controller-manager:v1.13.2 \
+  docker.io/karmada/karmada-webhook:v1.13.2
 ```
 
-### 7.如果安装失败则卸载并重新安装（执行3.重新进行安装）
+### 8.如果安装失败则卸载并重新安装（执行5.重新进行安装）
 
 ```bash
 karmadactl deinit --kubeconfig=$HOME/.kube/host.config
 ```
 
-### 8.创建一个成员集群并将其加入kubectl上下文再加入karmada集群
+### 9.安装成功后
+
+```
+安装成功后通过指定用户目录下的.karmada/karmada-apiserver.config配置文件来操作karmada
+```
+
+### 10.创建一个成员集群并将其加入kubectl上下文再加入karmada集群
 
 ```bash
 # 进入karmada目录
@@ -150,7 +186,7 @@ kubectl config use-context kind-host
 
 ```
 
-### 9.将成员注册到karmada
+### 11.将成员注册到karmada
 
 #### **1. Push 模式（推荐）**
 
@@ -172,3 +208,17 @@ sudo kubectl --kubeconfig=/etc/karmada/karmada-apiserver.config get clusters
 #### **2. Pull 模式**
 
 **适用场景**：Karmada 控制平面无法直接访问成员集群（如跨网络环境）。
+
+### 12.方便后续操作
+
+```bash
+# 将karmada配置合并到默认kubeconfig
+sudo cp /etc/karmada/karmada-apiserver.config ~/.kube/
+sudo chown $USER:$USER ~/.kube/karmada-apiserver.config
+export KUBECONFIG=~/.kube/config:~/.kube/karmada-apiserver.config
+kubectl config view --flatten > /tmp/config && mv /tmp/config ~/.kube/config
+
+# 之后可以直接使用
+kubectl --context=karmada-apiserver get clusters
+```
+
