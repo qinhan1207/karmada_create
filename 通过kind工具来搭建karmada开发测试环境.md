@@ -69,16 +69,16 @@ kind export kubeconfig --name host --kubeconfig ~/.kube/config
 kubectl config get-contexts
 
 # 切换集群
-kubectl config use-context kind-karmada-host
+kubectl config use-context kind-host
 ```
 
-### 4. **获取 `karmada-host` 集群的 kubeconfig**
+### 4. **获取 `karmada-host` 集群的 kubeconfig(如果）**
 
 默认情况下，`kind` 集群的 kubeconfig 会合并到 `~/.kube/config` 中，但我们可以单独导出 `karmada-host` 集群的配置：
 
 ```
 # 导出 karmada-host 集群的 kubeconfig 到 host.config
-kind get kubeconfig --name karmada-host > ~/.kube/host.config
+kind get kubeconfig --name kind-host > ~/.kube/host.config
 ```
 
 验证文件是否生成：
@@ -124,6 +124,17 @@ kind load docker-image docker.io/karmada/karmada-controller-manager:v1.13.2 --na
 
 docker pull docker.io/karmada/karmada-webhook:v1.13.2
 kind load docker-image docker.io/karmada/karmada-webhook:v1.13.2 --name karmada-host
+
+# 批量拉取
+docker pull docker.io/alpine:3.21.0 &
+docker pull registry.k8s.io/etcd:3.5.16-0 &
+docker pull registry.k8s.io/kube-apiserver:v1.31.3 &
+docker pull docker.io/karmada/karmada-controller-manager:v1.9.0 &
+docker pull docker.io/karmada/karmada-aggregated-apiserver:v1.13.2 &
+docker pull docker.io/karmada/karmada-scheduler:v1.13.2 &
+docker pull registry.k8s.io/kube-controller-manager:v1.31.3 &
+docker pull docker.io/karmada/karmada-controller-manager:v1.13.2 &
+docker pull docker.io/karmada/karmada-webhook:v1.13.2
 
 ```
 
