@@ -42,6 +42,15 @@ mirrors:
 k3d cluster create mycluster \
   --api-port 192.168.157.15:6443 \
   --volume ~/.k3d/registries/registries.yaml:/etc/rancher/k3s/registries.yaml
+  
+
+  
+k3d cluster create mycluster \
+  --api-port 192.168.17.21:6443   \
+  --env "HTTP_PROXY=http://192.168.124.5:7890@server:*"   \
+  --env "HTTPS_PROXY=http://192.168.124.5:7890@server:*"   \
+  --env "NO_PROXY=localhost,127.0.0.1,10.0.0.0/8,192.168.0.0/16,.svc,.cluster.local@server:*"
+
  
 # 创建集群2
 k3d cluster create mycluster2 \
@@ -74,8 +83,8 @@ scp -r k3d-config/ qinhan@<目标主机IP>:/home/qinhan/
 ```bash
 # 在安装了karmada的集群执行
 karmadactl join cluster1-name \
-  --cluster-kubeconfig=/path/to/cluster1-kubeconfig.yaml \
-  --kubeconfig=/home/qinhan/.kube/karmada-config
+  --cluster-kubeconfig=/home/qinhan/cluster1-kubeconfig.yaml \
+  --kubeconfig=/home/qinhan/karmada-config
   
   
   --cluster-kubeconfig：
@@ -85,6 +94,16 @@ karmadactl join cluster1-name \
   --kubeconfig：
   	用于指定 Karmada 控制平面的 kubeconfig 文件。
 	这个文件包含访问 Karmada 控制平面的必要信息。
+	
+# 移除集群
+karmadactl unjoin cluster1-name \
+  --cluster-kubeconfig=/home/qinhan/mycluster1.kubeconfig \
+  --kubeconfig=/home/qinhan/karmada-config
+  
+  karmadactl unjoin kwok-test \
+  --cluster-kubeconfig=/home/qinhan/kwok-test.yaml \
+  --karmada-kubeconfig=/home/qinhan/karmada-config \
+  --cluster-context=kwok-kwok-test
 ```
 
 ## 5.手动导入镜像到k3d创建的集群
